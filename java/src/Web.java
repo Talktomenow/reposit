@@ -5,6 +5,8 @@ import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * Created by Will on 2016/2/17.
@@ -17,22 +19,25 @@ public class Web {
 
     ServerSocket listener = new ServerSocket(8080);
 
+    //for thread pool
+    ExecutorService executor = Executors.newFixedThreadPool(4);
 
     try
 
     {
         while (true) {
             Socket socket = listener.accept();
-            /* single tread
-            try {
+            //(1) single thread
+            /*try {
                 handleRequest(socket);
             } catch (IOException e) {
                 e.printStackTrace();
             }
             */
-            //multiple=thread
-            new Thread(new HandleRequestRunnable(socket)).start();
-
+            //(2) multiple=thread, not resource-efficient
+            //new Thread(new HandleRequestRunnable(socket)).start();
+            //(3) thread pool
+            executor.submit( new HandleRequestRunnable(socket) );
         }
     }
 
