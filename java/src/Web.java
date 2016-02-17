@@ -5,8 +5,7 @@ import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 
 /**
  * Created by Will on 2016/2/17.
@@ -19,8 +18,10 @@ public class Web {
 
     ServerSocket listener = new ServerSocket(8080);
 
-    //for thread pool
+    //(3)for thread pool
     ExecutorService executor = Executors.newFixedThreadPool(4);
+    //(4)
+    ExecutorService executor4 = newBoundedFixedThreadPool(1, 1);
 
     try
 
@@ -37,7 +38,9 @@ public class Web {
             //(2) multiple=thread, not resource-efficient
             //new Thread(new HandleRequestRunnable(socket)).start();
             //(3) thread pool
-            executor.submit( new HandleRequestRunnable(socket) );
+           // executor.submit( new HandleRequestRunnable(socket) );
+            //(4) custmized ThreadPoolExecutor
+            executor4.submit( new HandleRequestRunnable(socket) );
         }
     }
 
@@ -68,6 +71,14 @@ public class Web {
             socket.close();
         }
     }
+    //这里我们没有直接使用Executors.newFixedThreadPool方法来创建线程池，而是自己构建了ThreadPoolExecutor对象，并将工作队列长度限制为16个元素。
+    public static ExecutorService newBoundedFixedThreadPool(int nThreads, int capacity) {
+        return new ThreadPoolExecutor(nThreads, nThreads,
+                0L, TimeUnit.MILLISECONDS,
+                new LinkedBlockingQueue<Runnable>(capacity),
+                new ThreadPoolExecutor.DiscardPolicy());
+    }
+
 }
 
 
@@ -87,4 +98,3 @@ class HandleRequestRunnable implements Runnable {
         }
     }
 }
-
