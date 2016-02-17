@@ -16,16 +16,23 @@ public class Web {
     {
 
     ServerSocket listener = new ServerSocket(8080);
+
+
     try
 
     {
         while (true) {
             Socket socket = listener.accept();
+            /* single tread
             try {
                 handleRequest(socket);
             } catch (IOException e) {
                 e.printStackTrace();
             }
+            */
+            //multiple=thread
+            new Thread(new HandleRequestRunnable(socket)).start();
+
         }
     }
 
@@ -34,6 +41,7 @@ public class Web {
     {
         listener.close();
     }
+
 }
 
     final static String response =
@@ -47,7 +55,7 @@ public class Web {
         try {
             BufferedReader in = new BufferedReader(
                     new InputStreamReader(socket.getInputStream()));
-            System.out.println(in.readLine());
+            System.out.println(Thread.currentThread().getName()+":"+in.readLine());
 
             OutputStream out = socket.getOutputStream();
             out.write(response.getBytes(StandardCharsets.UTF_8));
@@ -56,3 +64,22 @@ public class Web {
         }
     }
 }
+
+
+class HandleRequestRunnable implements Runnable {
+
+    final Socket socket;
+
+    public HandleRequestRunnable(Socket socket) {
+        this.socket = socket;
+    }
+
+    public void run() {
+        try {
+            Web.handleRequest(socket);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+
